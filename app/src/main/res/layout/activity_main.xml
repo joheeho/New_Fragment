@@ -5,14 +5,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp">
-
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="메모장(메모화면)"
         android:textSize="24sp"
         android:textStyle="bold"/>
-
     <EditText
         android:id="@+id/editText"
         android:layout_width="match_parent"
