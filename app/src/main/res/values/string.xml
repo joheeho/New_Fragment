@@ -1,0 +1,4 @@
+<resources>
+    <string name="menu_home"> 홈 </string>
+    <string name="menu_setting"> 세팅 </string>
+</resources>

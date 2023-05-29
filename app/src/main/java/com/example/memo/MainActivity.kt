@@ -1,58 +1,88 @@
 package com.example.memo
 
-import android.content.DialogInterface
+import android.content.ContentValues.TAG
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.memo.databinding.ActivityMainBinding
-
 class MainActivity : AppCompatActivity() {
-
     private lateinit var viewBinding: ActivityMainBinding
-    private var memo: String = ""
+    private lateinit var getText: ActivityResultLauncher<Intent>
+    private val dataList = ArrayList<Data>()
+    private lateinit var dataAdapter: DataAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
+
+        dataAdapter = DataAdapter(dataList)
+
         Toast.makeText(this.applicationContext,"onCreate",Toast.LENGTH_SHORT).show()
 
-        viewBinding.confirmButton.setOnClickListener {
+        viewBinding.btnAdd.setOnClickListener {
             val intent = Intent(this,SecondActivity::class.java)
-            intent.putExtra("data",viewBinding.editText.text.toString())
-            startActivity(intent)
+            getText.launch(intent)
         }
 
-    }
-     override fun onResume() {
-        super.onResume()
-        if (memo.isNotEmpty()) {
-            viewBinding.editText.setText(memo)
+        viewBinding.rvData.adapter = dataAdapter
+        viewBinding.rvData.layoutManager = LinearLayoutManager(this)
+
+        supportFragmentManager
+            .beginTransaction()
+            .replace(viewBinding.containerFragement.id,HomeFragment())
+            .commitAllowingStateLoss()
+
+        viewBinding.navBottom.run {
+            setOnItemSelectedListener{
+                when(it.itemId){
+                    R.id.menu_home ->{
+                        supportFragmentManager
+                            .beginTransaction()
+                            .replace(viewBinding.containerFragement.id,HomeFragment())
+                            .commitAllowingStateLoss()
+                    }
+                    R.id.menu_setting ->{
+                        supportFragmentManager
+                            .beginTransaction()
+                            .replace(viewBinding.containerFragement.id,SettingFragment())
+                            .commitAllowingStateLoss()
+                    }
+                }
+                true
+            }
+            selectedItemId= R.id.menu_home
         }
-         Toast.makeText(this,"onResume",Toast.LENGTH_SHORT).show()
+
+        getText = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){   // 문자열 받아오기
+                result -> if(result.resultCode== RESULT_OK){
+            val mString = result.data?.getStringExtra("data")
+            Log.d(TAG,"onCreate: good To go: $mString")
+            if (mString != null) {
+                dataList.add(Data(R.drawable.trash, mString))
+                dataAdapter.notifyDataSetChanged()
+                Toast.makeText(this, "메모가 추가되었습니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
+        }
     }
-    override fun onPause() {
+    override fun onResume() { //
+        super.onResume()
+        Toast.makeText(this,"onResume",Toast.LENGTH_SHORT).show()
+    }
+    override fun onPause() {   // 정지 상태에 있을 떄
         super.onPause()
-        memo = viewBinding.editText.text.toString()
-        viewBinding.editText.text.clear()
         Toast.makeText(this,"onPause",Toast.LENGTH_SHORT).show()
     }
 
     override fun onRestart() {
         super.onRestart()
-        showRestartDialog()
         Toast.makeText(this,"onRestart",Toast.LENGTH_SHORT).show()
     }
 
-    private fun showRestartDialog() {
-        val alertDialogBuilder = AlertDialog.Builder(this)
-        alertDialogBuilder.setMessage("다시 작성하시겠습니까?")
-        alertDialogBuilder.setPositiveButton("예"){dialog, which ->
-            viewBinding.editText.setText(memo)
-        }
-        alertDialogBuilder.setNegativeButton("아니오", null)
-        alertDialogBuilder.show()
-    }
 }
